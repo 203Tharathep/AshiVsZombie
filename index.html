@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashi vs Zombie: Defense of the Dorm (อชิ ปะทะ ซอมบี้)</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/sprites/plant_peashooter.png">
+</head>
+<body>
+    <div id="game-wrapper">
+        <!-- Top HUD Bar -->
+        <div id="top-hud-bar">
+            <!-- Left: Sun Bank + Seed Selection + Shovel -->
+            <div class="hud-left">
+                <div class="sun-bank">
+                    <img src="assets/sprites/sun_token.png" alt="Sun" class="sun-icon-hud" />
+                    <span id="sun-count">0</span>
+                </div>
+
+                <!-- Seed Cards Container -->
+                <div id="seed-cards-container">
+                    <!-- Injected dynamically by UIManager -->
+                </div>
+
+                <!-- Shovel Tool -->
+                <div class="shovel-button" id="shovel-btn" title="พลั่วขุดพืช (คลิกพืชเพื่อขุด)">
+                    <img src="assets/sprites/ui_shovel.png" alt="Shovel" />
+                    <span>พลั่ว</span>
+                </div>
+            </div>
+
+            <!-- Right: Level Info, Wave Bar, Menu Buttons -->
+            <div class="hud-right">
+                <div class="hud-buttons-row">
+                    <button class="hud-btn" id="speed-btn" title="ปรับความเร็วเกม">1x ⚡</button>
+                    <button class="hud-btn" id="music-btn" title="เปิด/ปิดดนตรีประกอบ">🎵 ดนตรี: เปิด</button>
+                    <button class="hud-btn" id="sound-btn" title="เปิด/ปิดเสียงเอฟเฟกต์">🔊 เสียง: เปิด</button>
+                    <button class="hud-btn" id="almanac-btn" title="สารานุกรมพืชและซอมบี้">📖 สารานุกรม</button>
+                    <button class="hud-btn" id="pause-btn" title="หยุดชั่วคราว / เลือกด่าน">⏸️ เมนู</button>
+                </div>
+
+                <!-- Wave Progress Bar -->
+                <div class="wave-progress-wrap">
+                    <span class="wave-label">WAVE</span>
+                    <div class="wave-progress-bar">
+                        <div id="wave-progress-fill"></div>
+                        <div id="wave-zombie-head">🧟</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage Title Sub-bar -->
+        <div id="stage-info-bar">
+            <span id="current-level-title">Stage 1-1: Welcome to Campus</span>
+            <span>💡 คลิกหรือชี้เมาส์ที่ดวงอาทิตย์ ☀️ เพื่อเก็บแต้ม | คลิกการ์ดแล้ววางในแปลงหญ้า</span>
+        </div>
+
+        <!-- Canvas Viewport -->
+        <div id="canvas-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <!-- MODAL: Pause / Settings -->
+        <div id="pause-modal" class="modal hidden">
+            <div class="modal-content">
+                <h1>⏸️ เกมหยุดชั่วคราว</h1>
+                <p>พักหายใจสักครู่ ซอมบี้อชิยังรอคุณอยู่!</p>
+                <div class="modal-btn-row">
+                    <button class="btn-primary" id="pause-resume-btn">เล่นต่อ ▶️</button>
+                    <button class="btn-primary" id="pause-restart-btn">เริ่มด่านนี้ใหม่ 🔄</button>
+                    <button class="btn-secondary" id="pause-level-select-btn">เลือกด่าน 🗺️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Level Select -->
+        <div id="level-select-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 680px;">
+                <h2>🗺️ เลือกด่านผจญภัย (Level Select)</h2>
+                <p>เลือกด่านที่ต้องการเล่น มีทั้งด่านกลางวัน กลางคืน สระน้ำ และบอสใหญ่!</p>
+                <div class="level-grid" id="level-grid">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="modal-btn-row">
+                    <button class="btn-secondary" id="close-level-select-btn">ปิด</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Almanac (Encyclopedia) -->
+        <div id="almanac-modal" class="modal hidden">
+            <div class="modal-content almanac-box">
+                <h2>📖 สารานุกรมอชิ (Ashi Almanac)</h2>
+                <div class="almanac-tabs">
+                    <button class="almanac-tab active" id="tab-plants-btn">🌱 ฝั่งพืชอชิ (Plants)</button>
+                    <button class="almanac-tab" id="tab-zombies-btn">🧟 ฝั่งซอมบี้ (Zombies)</button>
+                </div>
+                <div class="almanac-body">
+                    <div class="almanac-list" id="almanac-list"></div>
+                    <div class="almanac-detail" id="almanac-detail"></div>
+                </div>
+                <div class="modal-btn-row" style="margin-top: 10px;">
+                    <button class="btn-secondary" id="almanac-close-btn">ปิดสารานุกรม</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Reward New Plant -->
+        <div id="reward-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 คุณได้ปลดล็อกตัวละครใหม่!</h2>
+                <img src="" id="reward-plant-img" class="reward-bouncing-img" alt="Reward" />
+                <h3 id="reward-plant-name">Plant Name</h3>
+                <p id="reward-plant-desc">Plant description...</p>
+                <div style="margin: 8px 0; font-weight: bold; color: #ffea00;" id="reward-plant-cost"></div>
+                <div class="modal-btn-row">
+                    <button class="btn-primary" id="reward-ok-btn">ยอดเยี่ยม! ลุยต่อเลย 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Victory -->
+        <div id="victory-modal" class="modal hidden">
+            <div class="modal-content">
+                <h1>🏆 ชนะด่านแล้ว! (VICTORY)</h1>
+                <p>คุณปกป้องหอพักจากกองทัพซอมบี้ได้สำเร็จ!</p>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="val" id="stat-zombies-killed">0</div>
+                        <div class="lbl">ซอมบี้ที่กำจัด</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="val" id="stat-sun-collected">0</div>
+                        <div class="lbl">ดวงอาทิตย์ที่เก็บ</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="val" id="stat-plants-planted">0</div>
+                        <div class="lbl">พืชที่ปลูก</div>
+                    </div>
+                </div>
+                <div class="modal-btn-row">
+                    <button class="btn-primary" id="victory-next-btn">ด่านถัดไป ⏩</button>
+                    <button class="btn-secondary" id="victory-replay-btn">เล่นซ้ำ 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Game Over -->
+        <div id="gameover-modal" class="modal hidden">
+            <div class="modal-content">
+                <h1 style="color: #ff3333;">🧟 GAME OVER 🧟</h1>
+                <h3 style="color: #ff9999; margin: 10px 0;">ซอมบี้บุกเข้าหอพัก และกินสมองอชิไปแล้ว!</h3>
+                <p>อย่าเพิ่งยอมแพ้ วางแผนแนวป้องกันใหม่แล้วลุยอีกครั้ง!</p>
+                <div class="modal-btn-row">
+                    <button class="btn-primary" id="gameover-retry-btn">ลองใหม่อีกครั้ง 🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/plants.js"></script>
+    <script src="js/zombies.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            window.gameInstance = new AshiVsZombieGame();
+            window.gameInstance.init();
+        });
+    </script>
+</body>
+</html>
+
